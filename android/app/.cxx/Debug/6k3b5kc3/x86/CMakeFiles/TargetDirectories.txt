@@ -1,0 +1,2 @@
+D:/appdevelopement/firebasewithml/android/app/.cxx/Debug/6k3b5kc3/x86/CMakeFiles/edit_cache.dir
+D:/appdevelopement/firebasewithml/android/app/.cxx/Debug/6k3b5kc3/x86/CMakeFiles/rebuild_cache.dir
