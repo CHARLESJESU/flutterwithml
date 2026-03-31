@@ -6,6 +6,9 @@ import 'package:firebasewithml/Label_Scanner.dart';
 import 'package:firebasewithml/google_signin.dart';
 import 'package:flutter/material.dart';
 
+import 'firebasemessage(1).dart';
+import 'firebasemessaging.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -21,12 +24,15 @@ class Myapp extends StatefulWidget {
 }
 
 class Myapp1 extends State<Myapp> {
+  // final _notificationService = NotificationService();
+
   List<String> itemList = [
     'Text Scanner',
     'Bar Code Scanner',
     'Label Scanner',
     'Face Detector',
-    'Google SignIn'
+    'Google SignIn',
+    'Firebase Message'
   ];
 
   @override
@@ -72,6 +78,15 @@ class Myapp1 extends State<Myapp> {
                           builder: (context) => Login(),
                           settings: RouteSettings(arguments: itemList[index])));
                     }
+                    // else if (itemList[index] == 'Firebase Message') {
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //       builder: (context) => FirebaseMessageScreen(),
+                    //       settings: RouteSettings(arguments: itemList[index]),
+                    //     ),
+                    //   );
+                    // }
                     else {
                       Navigator.push(context, MaterialPageRoute(
                           builder: (context) => FaceDetectionScreen(),

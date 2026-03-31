@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'google_signin_success.dart';
 
@@ -10,130 +13,156 @@ class Login extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor:
-      MediaQuery.of(context).platformBrightness == Brightness.dark
-          ? Colors.black
-          : Colors.white,
+      backgroundColor: Colors.white,
       body: Center(
-        child: MediaQuery.of(context).size.width < 800
-            ? Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  vertical: 48, horizontal: 16),
-              child: Text(
-                'Welcome Back',
-                style: GoogleFonts.poppins(fontSize: 48),
+        child: Container(
+          width: size.width < 800 ? double.infinity : 600,
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.white, Colors.grey[100]!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black54,
+                blurRadius: 20,
+                offset: const Offset(0, 8),
               ),
-            ),
-            const SizedBox(height: 24),
-            const Spacer(),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-              child: SignIn(),
-            ),
-          ],
-        )
-            : Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Padding(
-                  padding:
-                  EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-                  child: Text(
-                    'Welcome Back',
-                    style: TextStyle(fontSize: 48),
-                  ),
-                ),
-                Padding(
-                  padding:
-                  EdgeInsets.symmetric(vertical: 48, horizontal: 16),
-                  child: SignIn(),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class SignIn extends StatefulWidget {
-  const SignIn({super.key});
-
-  @override
-  State<SignIn> createState() => _SignInState();
-}
-
-class _SignInState extends State<SignIn> {
-  late Widget wid;
-
-  @override
-  void initState() {
-    wid = googleSignInButton(context: context);
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return wid;
-  }
-
-  Widget googleSignInButton({required BuildContext context}) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          wid = const CircularProgressIndicator();
-        });
-        signInWithGoogle();
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SizedBox(
-          width: 300,
-          height: 40,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+            ],
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              const Icon(Icons.login),
-              const SizedBox(width: 5.0),
+            children: [
               Text(
-                'Sign-in with Google',
-                style: GoogleFonts.roboto(fontSize: 18),
+                'Join Us',
+                style: GoogleFonts.poppins(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Create an account to continue',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 40),
+              const SignUp(),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Future<void> signInWithGoogle() async {
+class SignUp extends StatefulWidget {
+  const SignUp({super.key});
+
+  @override
+  State<SignUp> createState() => _SignUpState();
+}
+
+class _SignUpState extends State<SignUp> {
+  late Widget _signUpWidget;
+
+  @override
+  void initState() {
+    _signUpWidget = _googleSignUpButton();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) => _signUpWidget;
+
+  Widget _googleSignUpButton() {
+    return ElevatedButton.icon(
+      onPressed: _handleSignUp,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
+        shadowColor: Colors.grey[600],
+        minimumSize: const Size(250, 50),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+        elevation: 6,
+      ),
+      icon: Image.asset(
+        'images/google-logo.png',
+        height: 24,
+        width: 24,
+      ),
+      label: Text(
+        'Sign up with Google',
+        style: GoogleFonts.poppins(fontSize: 16),
+      ),
+    );
+  }
+
+  Future<void> _handleSignUp() async {
+    setState(() {
+      _signUpWidget = const CircularProgressIndicator();
+    });
+
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final googleUser = await GoogleSignIn(
+        scopes: [
+          'email',
+          'profile',
+          'https://www.googleapis.com/auth/user.birthday.read',
+          'https://www.googleapis.com/auth/user.phonenumbers.read',
+        ],
+      ).signIn();
 
       if (googleUser == null) {
-        // User cancelled the sign-in
         setState(() {
-          wid = googleSignInButton(context: context);
+          _signUpWidget = _googleSignUpButton();
         });
         return;
       }
 
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+      final googleAuth = await googleUser.authentication;
 
+      // 🔥 Fetch extra data from Google People API
+      final peopleApiUrl = Uri.parse(
+        'https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,birthdays,phoneNumbers',
+      );
+
+      final response = await http.get(
+        peopleApiUrl,
+        headers: {
+          'Authorization': 'Bearer ${googleAuth.accessToken}',
+        },
+      );
+
+      String? phoneNumber;
+      String? birthDate;
+
+      if (response.statusCode == 200) {
+        final profileData = json.decode(response.body);
+
+        if (profileData['phoneNumbers'] != null) {
+          phoneNumber = profileData['phoneNumbers'][0]['value'];
+        }
+
+        if (profileData['birthdays'] != null) {
+          final bday = profileData['birthdays'][0]['date'];
+          birthDate = "${bday['day']}-${bday['month']}-${bday['year']}";
+        }
+      } else {
+        print("Failed to fetch from People API: ${response.body}");
+      }
+
+      // ✅ Firebase sign-in
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
@@ -141,33 +170,33 @@ class _SignInState extends State<SignIn> {
 
       final userCredential =
       await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
 
-      if (user != null) {
+      if (userCredential.user != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Signed in as ${user.displayName}'),
-          ),
-
+          SnackBar(content: Text('Signed up as ${userCredential.user!.displayName}')),
         );
-        Navigator.push(context, MaterialPageRoute(
-            builder: (context) => SigninSuccess(),
-            ));
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SigninSuccess(
+              name: userCredential.user!.displayName ?? '',
+              email: userCredential.user!.email ?? '',
+              photoUrl: userCredential.user!.photoURL ?? '',
+              phoneNumber: phoneNumber ?? 'Not available',
+              birthDate: birthDate ?? 'Not available',
+            ),
+          ),
+        );
       }
-
-      setState(() {
-        wid = googleSignInButton(context: context);
-      });
     } catch (e) {
-      setState(() {
-        wid = googleSignInButton(context: context);
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Sign-in failed: $e'),
-        ),
+        SnackBar(content: Text('Sign-up failed: $e')),
       );
     }
+
+    setState(() {
+      _signUpWidget = _googleSignUpButton();
+    });
   }
 }
